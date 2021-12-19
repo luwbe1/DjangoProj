@@ -1,4 +1,4 @@
-from shop.models import Product, Comment, Category
+from shop.models import Product, Comment, Category, Manufacturer
 from django.shortcuts import render
 from django.http import HttpResponse
 

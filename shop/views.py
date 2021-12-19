@@ -2,10 +2,32 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q
 from django.shortcuts import render, redirect, get_object_or_404
-from django.views.generic import ListView, DetailView, CreateView, UpdateView
-from .models import Product, Category, Tag, Manufacturer
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from .models import Product, Category, Tag, Comment
 from django.utils.text import slugify
 from .forms import CommentForm
+
+
+class CommentUpdate(LoginRequiredMixin, UpdateView):
+    model = Comment
+    form_class = CommentForm
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated and request.user == self.get_object().author:
+            return super(CommentUpdate, self).dispatch(request, *args, **kwargs)
+        else:
+            raise PermissionDenied
+
+
+def delete_comment(request, pk):
+    comment = get_object_or_404(Comment, pk=pk)
+    product = comment.product
+
+    if request.user.is_authenticated and request.user == comment.author:
+        comment.delete()
+        return redirect(product.get_absolute_url())
+    else:
+        raise PermissionDenied
 
 
 def new_comment(request, pk):
@@ -171,6 +193,7 @@ def tag_page(request, slug):
                       'no_category_post_count': Product.objects.filter(category=None).count(),
                       'tag': tag
                   })
+
 
 # def index(request):
 #     posts = Post.objects.all().order_by('-pk') # pk의 역순

@@ -35,8 +35,8 @@
         <div class="row">
             <div class="col-12">
                 <div class="card">
+                    {% for comment in comment %}
                     <div class="card-body">
-                        {% for comment in comment %}
                         <div class="card-body">
                             <small class="text-muted">{{comment.created_at}}</small></div>
                         <a href="{{comment.get_absolute_url}}" class="fw-bold text-dark"><h5>
