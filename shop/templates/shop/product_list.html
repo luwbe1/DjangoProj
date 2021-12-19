@@ -1,0 +1,80 @@
+{% extends 'shop/base.html' %}
+{% block main_area %}
+{% if user.is_authenticated %}
+{% if user.is_staff or user.is_superuser %}
+<a class="btn btn-dark btn-small float-right" href="/shop/create_product">
+    <i class="fas fa-pen"></i>  New product
+</a>
+{% endif %}
+{% endif %}
+<h1>
+    LCK Tickets
+    {% if search_info %} <span class="badge bg-dark">{{search_info}}</span>{% endif %}
+    {% if category %} <span class="badge bg-dark">{{category}}</span>{% endif %}
+    {% if tag %} <i class="fas fa-tags"></i><span class="badge bg-light">{{tag}}({{tag.product_set.count}})</span>{% endif %}
+</h1>
+{% if product_list.exists %}
+<!-- Blog product-->
+{% for p in product_list %} <!-- product_list 개수만큼 반복문 -->
+<div class="card mb-4" id="product-{{p.pk}}">
+    {% if p.head_image %} <!-- 헤드 이미지가 있을 때만, alt는 이 태그에 대한 별명 p를 가져온다. -->
+    <img class="card-img-top" src="{{ p.head_image.url }}" alt="{{p}}의 head image"/>
+    {% else %} <!-- 없으면 랜덤 이미지 -->
+    <img class="card-img-top" src="https://picsum.photos/seed/{{p.id}}/800/200" alt="random image"/>
+    {% endif %}
+    <div class="card-body">
+        {% if p.category %}
+        <span class="badge bg-info float-right">{{p.category}}</span>
+        {% else %}
+        <span class="badge bg-info float-right">미분류</span>
+        {% endif %}
+        <h2 class="card-title h4">{{ p.title | upper }}</h2> <!-- 대문자 필터는 Upper, 소문자는 lower -->
+        <h8 class="text_muted font-weight-bold">{{ p.price }}원, </h8>
+        <h8 class="text_muted font-weight-bold">일시 : {{p.open_at | date:"20y-m-d h:m:s"}}</h8>
+        <br> <br>
+        {% if p.hook_text %} <!-- 있으면 hook_text 출력 -->
+        <h5 class="text_muted">{{ p.hook_text }}</h5>
+        {% endif %}
+        <!--
+        <p class="card-text">{{ p.get_content_markdown | truncatewords_html:50 |safe}}</p>
+        !-->
+        <br>
+        {% if p.tags.exists %}
+        <i class="fas fa-tags"></i>
+        {% for tag in p.tags.all %}
+        <a href="{{tag.get_absolute_url}}"><span class="badge bg-light">{{tag}}</span></a>
+        {% endfor %}
+        <br/><br/>
+        {% endif %}
+        <!-- 첫 100글자만 보여주고 싶을 때 / truncatewords:45는 첫 45단어만 -->
+        <a class="btn btn-dark" href="{{ p.get_absolute_url }}">Read more →</a> <!-- 상세 페이지로 이동하겠다. -->
+    </div>
+    <div class="card-footer">
+        <!-- 필터 중에 date 필터를 사용 따옴표 안에 원하는 형식을 넣는다, y가 있고 Y가 있음 -->
+        <div class="small text-muted">{{ p.created_at | date:"20y-m-d h:m:s"}} by {{p.author | upper}}
+        </div>
+    </div>
+</div>
+{% endfor %} <!-- for문 종료 -->
+{% else %}
+<h2>아직 게시물이 없습니다.</h2>
+{% endif %}
+
+<!-- Pagination-->
+{% if is_paginated %}
+<ul class="pagination justify-content-center my-4">
+    {% if page_obj.has_previous %}
+    <li class="page-item"><a class="page-link" href="?page={{page_obj.previous_page_number}}" tabindex="-1" aria-disabled="true">&larr;
+        Newer</a></li>
+    {% else %}
+        <li class="page-item disabled"><a class="page-link" href="#" tabindex="-1" aria-disabled="true">&larr;
+        Newer</a></li>
+    {% endif %}
+    {% if page_obj.has_next %}
+    <li class="page-item"><a class="page-link" href="?page={{page_obj.next_page_number}}">Older &rarr;</a></li>
+    {% else %}
+    <li class="page-item disabled"><a class="page-link" href="#!">Older &rarr;</a></li>
+    {% endif %}
+</ul>
+{% endif %}
+{% endblock %}

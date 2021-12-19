@@ -1,0 +1,111 @@
+{% extends 'shop/base.html' %}
+{% load crispy_forms_tags %}
+{% block head_title %}
+{{ product.title }} - Shop
+{% endblock %}
+{% block main_area %}
+<div id="product-area">
+    <!-- product header-->
+    <header class="mb-4">
+        {% if product.category %}
+        <span class="badge bg-secondary float-right">{{product.category}}</span>
+        {% else %}
+        <span class="badge bg-secondary float-right">미분류</span>
+        {% endif %}
+        <!-- product title-->
+        <h1 class="fw-bolder mb-1">{{ product.title }}</h1>
+        <h5 class="text_muted">{{ product.hook_text }}</h5> <!-- 없는 경우엔, 지나감 if문 사용하지 않아도 됨-->
+        <!-- product meta content--> <!-- 템플릿 필터 사용시, 변수 다음에 바(|) 사용 -->
+        <div class="text-muted fst-italic mb-2">upload on {{ product.created_at | date:"20y-m-d h:m:s"}} by
+            {{product.author | upper}}
+            {% if user.is_authenticated and user == product.author %}
+            <a href="/shop/update_product/{{product.pk}}/" class="btn btn-dark btn-sm float-right">
+                <i class="fas fa-pen"></i>
+                Edit product
+            </a>
+            {% endif %}
+        </div>
+    </header>
+    <!-- Preview images figure-->
+    <figure class="mb-4">
+        {% if product.head_image %} <!-- 헤드 이미지 있을 때만-->
+        <img class="img-fluid rounded" src="{{ product.head_image.url }}" alt="{{product.title}}의 head image"/>
+        {% else %} <!-- 랜덤 이미지 -->
+        <img class="img-fluid rounded" src="https://picsum.photos/seed/{{product.id}}/800/200" alt="random image"/>
+        {% endif %}
+    </figure>
+    <h5 class="text_muted font-weight-bold">가격 : {{ product.price }}원 일시 : {{product.open_at | date:"20y-m-d h:m:s"}}</h5>
+    <!-- product content-->
+    <section class="mb-5"> <!-- product에 있는 content를 출력해라 -->
+        <p> {{product.get_content_markdown | safe}} </p>
+        {% if product.tags.exists %}
+        <i class="fas fa-tags"></i>
+        {% for tag in product.tags.all %}
+        <a href="{{tag.get_absolute_url}}"><span class="badge bg-light">{{tag}}</span></a>
+        {% endfor %}
+        <br/><br/>
+        {% endif %}
+    </section>
+</div>
+<!-- Button trigger modal -->
+<button type="button" class="btn btn-dark position-absolute bottom:0px right:0px" data-toggle="modal" data-target="#exampleModal">
+  {{product.name}}
+</button>
+<!-- Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">제조사 정보</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+         <i class="fas fa-building"></i>  {{product.name}} <br>
+        <i class="fas fa-address-book"></i>  {{product.name.address}} <br>
+         <i class="fas fa-phone"></i>  {{product.name.phone}}
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<br> <br>
+<!-- Comments section-->..
+<div class="mb-5" id="comment-area">
+    <div class="card bg-light">
+        <div class="card-body">
+            <!-- Comment form-->
+            {% if user.is_authenticated %}
+            <form class="mb-4" id="comment-form" method="POST" action="{{product.get_absolute_url}}new_comment/">
+                {% csrf_token %}
+                <div class="form-group">
+                    {{comment_form | crispy}}
+                </div>
+                <button type="submit" class="btn btn-dark">Submit</button>
+            </form>
+            {% else %}
+            <a role="button" class="btn btn-outline-dark" href="#" data-toggle="modal" data-target="#loginModal">Log in
+                and leave a comment</a>
+            {% endif %}
+            <!-- Single comment-->
+            {% if product.comment_set.exists %}
+            {% for comment in product.comment_set.all %}
+            <div class="d-flex" id="comment-{{comment.pk}}">
+                <div class="flex-shrink-0"><img class="rounded-circle"
+                                                src="{{comment.get_avatar_url}}"
+                                                alt="{{comment.author}}" width="60px"/></div>
+                <div class="ms-3">
+                    <div class="fw-bold">{{comment.author.username}} &nbsp;&nbsp;&nbsp;
+                        <small class="text-muted">{{comment.created_at}}</small></div>
+                    <p>{{comment.content | linebreaks}}</p>
+                </div>
+            </div>
+            {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
